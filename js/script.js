@@ -1,28 +1,54 @@
 "use strict";
 
-// adres url :
+// adres url / zmienne :
 
-var url = 'http://api.icndb.com/jokes/random';
+var tweetLink = "https://twitter.com/intent/tweet?text=";
+var quoteUrl = "https://quotesondesign.com/wp-json/posts?filter[orderby]=rand&filter[posts_per_page]=1";
 
-// nasluchiwanie :
+// pobieranie losowego cytaty za pomoca API  :
+function getQuote() {
+    fetch(quoteUrl, {
+            cache: "no-store"
+        })
+        .then(function (resp) {
+            return resp.json();
+        })
+        .then(createTweet);
+}
 
-var button = document.getElementById('get-joke');
-button.addEventListener('click', function(){
-  getJoke();
-});
+// tworzenie linkow z cytatami i podpiecie :
+function createTweet(input) {
+    var data = input[0];
 
-// wyswietlanie :
+    var dataElement = document.createElement('div');
+    dataElement.innerHTML = data.content;
+    var quoteText = dataElement.innerText.trim();
+    var quoteAuthor = data.title;
 
-var paragraph = document.getElementById('joke');
+    if (!quoteAuthor.length) {
+        quoteAuthor = "Unknown author";
+    }
 
-// funkcja z request :
+    // generowanie tresci twitta w funkcju createTweet :
 
-function getJoke() {
-    var xhr = new XMLHttpRequest();
-    xhr.open('GET', url);
-    xhr.addEventListener('load', function(){
-      var response = JSON.parse(xhr.response);
-      paragraph.innerHTML = response.value.joke;
+    var tweetText = "Quote of the day - " + quoteText + " Author: " + quoteAuthor;
+    if (tweetText.length > 140) {
+        getQuote();
+    } else {
+        var tweet = tweetLink + encodeURIComponent(tweetText);
+        //wyswietlanie tresci cytaty i autora :
+
+        document.querySelector('.quote').innerText = quoteText;
+        document.querySelector('.author').innerText = "Author: " + quoteAuthor;
+        document.querySelector('.tweet').setAttribute('href', tweet);
+    }
+}
+
+// nasluchiwanie na zdarzenie po kliknieciu w button :
+
+document.addEventListener('DOMContentLoaded', function() {
+    getQuote();
+    document.querySelector('.trigger').addEventListener('click', function() {
+        getQuote();
     });
-    xhr.send();
-  };
+});
